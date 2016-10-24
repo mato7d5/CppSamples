@@ -15,6 +15,7 @@ private:
 
 public:
     explicit DeleterFunctor(int num) : mNumber{num} { }
+    DeleterFunctor(const DeleterFunctor& d) : mNumber{d.mNumber} { cout << "Copy ctor of DeleterFunctor\n";}
 
     void operator() (int* i) { cout << "DeleterFunctor with value: " << mNumber << '\n'; delete i; }
 };
@@ -27,8 +28,20 @@ int main() {
 
     {
         DeleterFunctor deleter(100);
-        unique_ptr<int, DeleterFunctor> p_d(new int, deleter);
+        unique_ptr<int, DeleterFunctor> p_d(new int, deleter); // copy of deleter
         *p_d = 200;
+    }
+
+    {
+        DeleterFunctor deleter(200);
+        unique_ptr<int, DeleterFunctor&> p_d(new int, deleter); // deleter as reference
+        *p_d = 300;
+    }
+
+    {
+        auto lambda_deleter = [] (int* p) -> void { cout << "lambda_deleter\n"; delete p; };
+        unique_ptr<int, decltype(lambda_deleter)> p_l(new int, lambda_deleter);
+        *p_l = 400;
     }
 
     return 0;
